@@ -1,0 +1,10 @@
+{
+  "name": "KN商品",
+  "short_name": "KN商品",
+  "description": "KNレジ用の商品QRコードを作成します。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eeeae0",
+  "theme_color": "#0c382f",
+  "icons": [{ "src": "/kn-logo.png", "sizes": "256x256", "type": "image/png" }]
+}
