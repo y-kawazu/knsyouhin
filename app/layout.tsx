@@ -14,7 +14,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     manifest: "/manifest.webmanifest",
-    icons: { icon: "/favicon.svg", apple: "/kn-logo.png" },
+    icons: {
+      icon: [{ url: "/kn-logo.png?v=2", type: "image/png", sizes: "256x256" }],
+      shortcut: "/kn-logo.png?v=2",
+      apple: "/kn-logo.png?v=2",
+    },
     openGraph: { title, description, type: "website", images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "KN商品の紹介画像" }] },
     twitter: { card: "summary_large_image", title, description, images: [`${origin}/og.png`] },
   };
