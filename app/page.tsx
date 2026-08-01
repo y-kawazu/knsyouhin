@@ -5,6 +5,65 @@ import { ChangeEvent, FormEvent, useRef, useState } from "react";
 
 type ProductCode = { code: string; name: string; price: number };
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("image failed"));
+    image.src = src;
+  });
+}
+
+function wrapLabel(context: CanvasRenderingContext2D, label: string, maxWidth: number) {
+  const lines: string[] = [];
+  let line = "";
+  for (const character of label) {
+    const next = line + character;
+    if (line && context.measureText(next).width > maxWidth) {
+      lines.push(line);
+      line = character;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+async function createProductQrImage(product: ProductCode) {
+  const qrDataUrl = await QRCode.toDataURL(JSON.stringify(product), {
+    width: 720, margin: 2, errorCorrectionLevel: "M",
+    color: { dark: "#0c382f", light: "#ffffff" },
+  });
+  const qr = await loadImage(qrDataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = 720;
+  canvas.height = 900;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("canvas failed");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(qr, 0, 0, 720, 720);
+  context.fillStyle = "#0c382f";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  let fontSize = 52;
+  let lines: string[] = [];
+  while (fontSize >= 22) {
+    context.font = `700 ${fontSize}px sans-serif`;
+    lines = wrapLabel(context, product.name, 640);
+    if (lines.length <= 2) break;
+    fontSize -= 2;
+  }
+  const lineHeight = fontSize * 1.22;
+  const firstLineY = 810 - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((line, index) => context.fillText(line, 360, firstLineY + index * lineHeight));
+
+  return canvas.toDataURL("image/jpeg", 1);
+}
+
 function makeProductCode() {
   const now = new Date();
   const digits = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"),
@@ -69,11 +128,7 @@ export default function Home() {
       return;
     }
     const nextProduct = { code: makeProductCode(), name: cleanName, price: numericPrice };
-    const dataUrl = await QRCode.toDataURL(JSON.stringify(nextProduct), {
-      width: 720, margin: 2, errorCorrectionLevel: "M",
-      color: { dark: "#0c382f", light: "#ffffff" },
-      type: "image/jpeg", quality: 1,
-    });
+    const dataUrl = await createProductQrImage(nextProduct);
     setProduct(nextProduct);
     setQrImage(dataUrl);
     setMessage("KNレジ用QRコードができました。");
@@ -143,7 +198,7 @@ export default function Home() {
           <div className="result-header"><div><p>03 / QR CODE</p><h2>QRコード</h2></div>{product && <span>完成</span>}</div>
           {product && qrImage ? <>
             <article className="qr-output">
-              <img className="qr-image" src={qrImage} alt={`${product.name}のQRコード`} />
+              <img className="qr-image" src={qrImage} alt={`${product.name}の商品名付きQRコード`} />
             </article>
             <div className="result-actions">
               <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
