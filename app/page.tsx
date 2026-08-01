@@ -90,12 +90,28 @@ export default function Home() {
     if (fileInput.current) fileInput.current.value = "";
   }
 
-  function downloadQr() {
+  async function saveQrToFiles() {
     if (!qrImage || !product) return;
+    const safeName = product.name.replace(/[\\/:*?"<>|]/g, "_").trim() || "KN商品";
+    const filename = `${safeName}.png`;
+
+    try {
+      const blob = await (await fetch(qrImage)).blob();
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: product.name });
+        setMessage(`「${filename}」の共有が完了しました。`);
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+
     const link = document.createElement("a");
     link.href = qrImage;
-    link.download = `KN商品_${product.name}_${product.price}円.png`;
+    link.download = filename;
     link.click();
+    setMessage(`「${filename}」を保存しました。`);
   }
 
   return (
@@ -140,9 +156,10 @@ export default function Home() {
               <p className="product-code">{product.code}</p>
             </article>
             <div className="result-actions">
-              <button type="button" className="save-button" onClick={downloadQr}>QR画像を保存</button>
+              <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
               <button type="button" className="print-button" onClick={() => window.print()}>ラベルを印刷</button>
             </div>
+            <p className="file-save-note">Appleでは共有画面から「“ファイル”に保存」を選んでください。</p>
             <button type="button" className="reset-button" onClick={reset}>次の商品を作る</button>
           </> : <div className="empty-result">
             <div className="empty-qr" aria-hidden="true"><i /><i /><i /></div>
