@@ -72,6 +72,7 @@ export default function Home() {
     const dataUrl = await QRCode.toDataURL(JSON.stringify(nextProduct), {
       width: 720, margin: 2, errorCorrectionLevel: "M",
       color: { dark: "#0c382f", light: "#ffffff" },
+      type: "image/jpeg", quality: 1,
     });
     setProduct(nextProduct);
     setQrImage(dataUrl);
@@ -87,11 +88,11 @@ export default function Home() {
   async function saveQrToFiles() {
     if (!qrImage || !product) return;
     const safeName = product.name.replace(/[\\/:*?"<>|]/g, "_").trim() || "KN商品";
-    const filename = `${safeName}.png`;
+    const filename = `${safeName}.jpg`;
 
     try {
       const blob = await (await fetch(qrImage)).blob();
-      const file = new File([blob], filename, { type: "image/png" });
+      const file = new File([blob], filename, { type: "image/jpeg" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: product.name });
         setMessage(`「${filename}」の共有が完了しました。`);
