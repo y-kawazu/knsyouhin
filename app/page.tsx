@@ -33,7 +33,7 @@ function wrapLabel(context: CanvasRenderingContext2D, label: string, maxWidth: n
 async function createProductQrImage(product: ProductCode) {
   const qrDataUrl = await QRCode.toDataURL(JSON.stringify(product), {
     width: 720, margin: 2, errorCorrectionLevel: "M",
-    color: { dark: "#0c382f", light: "#ffffff" },
+    color: { dark: "#000000", light: "#ffffff" },
   });
   const qr = await loadImage(qrDataUrl);
   const canvas = document.createElement("canvas");
@@ -45,7 +45,7 @@ async function createProductQrImage(product: ProductCode) {
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(qr, 0, 0, 720, 720);
-  context.fillStyle = "#0c382f";
+  context.fillStyle = "#000000";
   context.textAlign = "center";
   context.textBaseline = "middle";
 
@@ -205,10 +205,10 @@ export default function Home() {
             </article>
             <div className="result-actions">
               <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
-              <button type="button" className="print-button" onClick={() => window.print()}>QRコードを印刷</button>
+              <button type="button" className="next-button" onClick={reset}>次の商品を作る</button>
             </div>
             <p className="file-save-note">Appleでは共有画面から「“ファイル”に保存」を選んでください。</p>
-            <button type="button" className="reset-button" onClick={reset}>次の商品を作る</button>
+            <button type="button" className="print-button" onClick={() => window.print()}>QRコードを印刷</button>
           </> : <div className="empty-result">
             <div className="empty-qr" aria-hidden="true"><i /><i /><i /></div>
             <h3>QRコードはここに表示されます</h3>
