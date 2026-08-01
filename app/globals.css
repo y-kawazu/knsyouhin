@@ -9,7 +9,7 @@ button,input { font:inherit; } button { touch-action:manipulation; }
 .topbar { width:min(1120px,calc(100% - 32px)); min-height:92px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:18px; }
 .brand-lockup { display:flex; align-items:center; gap:13px; }
 .brand-mark { width:50px; height:50px; border-radius:15px; box-shadow:0 8px 20px rgba(12,56,47,.2); }
-.brand-lockup p,.section-heading p,.result-header p,.label-copy small { margin:0; color:var(--green-2); font-size:10px; font-weight:900; letter-spacing:.16em; }
+.brand-lockup p,.section-heading p,.result-header p { margin:0; color:var(--green-2); font-size:10px; font-weight:900; letter-spacing:.16em; }
 .brand-lockup h1 { margin:2px 0 0; font-size:clamp(23px,4vw,30px); letter-spacing:.04em; }
 .register-badge { border:1px solid rgba(12,56,47,.22); border-radius:999px; padding:10px 15px; color:var(--green); background:rgba(255,255,255,.48); font-size:12px; font-weight:850; }
 .workspace { width:min(1120px,calc(100% - 32px)); margin:4px auto 34px; display:grid; grid-template-columns:minmax(0,.94fr) minmax(420px,1.06fr); gap:20px; align-items:start; }
@@ -51,15 +51,8 @@ button,input { font:inherit; } button { touch-action:manipulation; }
 .empty-qr { width:125px; height:125px; padding:17px; border-radius:18px; background:#f0f0e9; position:relative; opacity:.75; }
 .empty-qr i { position:absolute; width:29px; height:29px; border:7px solid #aab0ad; }
 .empty-qr i:nth-child(1) { top:18px; left:18px; } .empty-qr i:nth-child(2) { top:18px; right:18px; } .empty-qr i:nth-child(3) { bottom:18px; left:18px; }
-.product-label { margin-top:22px; padding:14px; border:1px solid var(--line); border-radius:22px; background:white; box-shadow:0 16px 40px rgba(52,48,39,.12); }
-.label-photo { height:245px; border-radius:14px; overflow:hidden; position:relative; background:#e5e5dd; }
-.label-photo>img:first-child { width:100%; height:100%; object-fit:cover; }
-.label-photo .label-logo { position:absolute; left:13px; top:13px; width:43px; height:43px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,.22); }
-.label-copy { display:grid; grid-template-columns:1fr 145px; gap:14px; align-items:center; padding:17px 5px 5px 8px; }
-.label-copy h3 { margin:5px 0 8px; font-size:clamp(20px,4vw,28px); line-height:1.35; letter-spacing:-.03em; overflow-wrap:anywhere; }
-.label-copy strong { color:var(--green); font:800 clamp(30px,6vw,45px)/1 Georgia,"Yu Mincho",serif; }
-.qr-image { width:145px; height:145px; }
-.product-code { margin:5px 8px 2px; color:#8b938f; font:700 10px/1.4 ui-monospace,monospace; letter-spacing:.08em; }
+.qr-output { min-height:450px; margin-top:22px; padding:26px; border:1px solid var(--line); border-radius:22px; background:white; box-shadow:0 16px 40px rgba(52,48,39,.12); display:grid; place-items:center; }
+.qr-image { width:min(100%,360px); height:auto; display:block; }
 .result-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
 .result-actions button { min-height:52px; box-shadow:none; }
 .print-button { background:var(--lime); color:var(--green); }
@@ -67,5 +60,5 @@ button,input { font:inherit; } button { touch-action:manipulation; }
 .reset-button { width:100%; margin-top:5px; padding:13px; border:0; background:transparent; color:var(--green-2); font-weight:800; cursor:pointer; }
 footer { width:min(1120px,calc(100% - 32px)); margin:0 auto 28px; color:#707b76; text-align:center; font-size:12px; }
 @media (max-width:820px) { .workspace{grid-template-columns:1fr}.result-card{min-height:570px;position:static}.empty-result{min-height:440px} }
-@media (max-width:520px) { .topbar,.workspace,footer{width:min(100% - 22px,1120px)}.topbar{min-height:80px}.brand-mark{width:44px;height:44px;border-radius:13px}.register-badge{padding:8px 11px;font-size:10px}.editor-card,.result-card{border-radius:21px;padding:19px}.photo-picker{aspect-ratio:4/3}.label-photo{height:205px}.label-copy{grid-template-columns:1fr 116px}.qr-image{width:116px;height:116px}.result-actions{grid-template-columns:1fr} }
-@media print { body{background:white}.topbar,.editor-card,.result-header,.result-actions,.file-save-note,.reset-button,footer{display:none!important}.workspace{display:block;width:100%;margin:0}.result-card{min-height:0;padding:0;border:0;box-shadow:none}.product-label{width:150mm;margin:0 auto;box-shadow:none;break-inside:avoid} }
+@media (max-width:520px) { .topbar,.workspace,footer{width:min(100% - 22px,1120px)}.topbar{min-height:80px}.brand-mark{width:44px;height:44px;border-radius:13px}.register-badge{padding:8px 11px;font-size:10px}.editor-card,.result-card{border-radius:21px;padding:19px}.photo-picker{aspect-ratio:4/3}.qr-output{min-height:330px;padding:18px}.result-actions{grid-template-columns:1fr} }
+@media print { body{background:white}.topbar,.editor-card,.result-header,.result-actions,.file-save-note,.reset-button,footer{display:none!important}.workspace{display:block;width:100%;margin:0}.result-card{min-height:0;padding:0;border:0;box-shadow:none}.qr-output{min-height:0;margin:0;padding:0;border:0;box-shadow:none}.qr-image{width:110mm} }

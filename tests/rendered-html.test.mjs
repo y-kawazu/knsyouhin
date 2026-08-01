@@ -30,5 +30,8 @@ test("KNレジ互換の商品データをQR化する", async () => {
   assert.match(page, /Appleのファイルに保存/);
   assert.match(page, /const filename = `\$\{safeName\}\.png`/);
   assert.match(page, /navigator\.share/);
-  assert.match(page, /ラベルを印刷/);
+  assert.match(page, /<h2>QRコード<\/h2>/);
+  assert.match(page, /QRコードを印刷/);
+  assert.match(page, /className="qr-output"/);
+  assert.doesNotMatch(page, /商品ラベル|product-label|label-photo/);
 });

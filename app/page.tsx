@@ -5,12 +5,6 @@ import { ChangeEvent, FormEvent, useRef, useState } from "react";
 
 type ProductCode = { code: string; name: string; price: number };
 
-function yen(value: number) {
-  return new Intl.NumberFormat("ja-JP", {
-    style: "currency", currency: "JPY", maximumFractionDigits: 0,
-  }).format(value);
-}
-
 function makeProductCode() {
   const now = new Date();
   const digits = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"),
@@ -145,19 +139,14 @@ export default function Home() {
         </form>
 
         <section className={`result-card ${product ? "is-ready" : ""}`} aria-live="polite">
-          <div className="result-header"><div><p>03 / QR CODE</p><h2>商品ラベル</h2></div>{product && <span>完成</span>}</div>
+          <div className="result-header"><div><p>03 / QR CODE</p><h2>QRコード</h2></div>{product && <span>完成</span>}</div>
           {product && qrImage ? <>
-            <article className="product-label">
-              <div className="label-photo"><img src={photo} alt={product.name} /><img className="label-logo" src="/kn-logo.png" alt="KN" /></div>
-              <div className="label-copy">
-                <div><small>KN PRODUCT</small><h3>{product.name}</h3><strong>{yen(product.price)}</strong></div>
-                <img className="qr-image" src={qrImage} alt={`${product.name}のQRコード`} />
-              </div>
-              <p className="product-code">{product.code}</p>
+            <article className="qr-output">
+              <img className="qr-image" src={qrImage} alt={`${product.name}のQRコード`} />
             </article>
             <div className="result-actions">
               <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
-              <button type="button" className="print-button" onClick={() => window.print()}>ラベルを印刷</button>
+              <button type="button" className="print-button" onClick={() => window.print()}>QRコードを印刷</button>
             </div>
             <p className="file-save-note">Appleでは共有画面から「“ファイル”に保存」を選んでください。</p>
             <button type="button" className="reset-button" onClick={reset}>次の商品を作る</button>
