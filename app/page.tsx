@@ -49,19 +49,19 @@ async function createProductQrImage(product: ProductCode) {
   context.textAlign = "center";
   context.textBaseline = "middle";
 
-  let fontSize = 58;
+  let fontSize = 87;
   let lines: string[] = [];
-  while (fontSize >= 26) {
-    context.font = `700 ${fontSize}px sans-serif`;
+  while (fontSize >= 39) {
+    context.font = `800 ${fontSize}px sans-serif`;
     lines = wrapLabel(context, product.name, 400);
-    if (lines.length <= 4) break;
-    fontSize -= 2;
+    if (lines.length <= 4 && lines.length * fontSize * 1.16 <= 350) break;
+    fontSize -= 3;
   }
-  const lineHeight = fontSize * 1.22;
+  const lineHeight = fontSize * 1.16;
   const firstLineY = 285 - ((lines.length - 1) * lineHeight) / 2;
   lines.forEach((line, index) => context.fillText(line, 960, firstLineY + index * lineHeight));
 
-  context.font = "700 72px sans-serif";
+  context.font = "800 108px sans-serif";
   context.fillText(`¥${product.price.toLocaleString("ja-JP")}`, 960, 535);
 
   return canvas.toDataURL("image/jpeg", 1);
