@@ -52,7 +52,7 @@ button,input { font:inherit; } button { touch-action:manipulation; }
 .empty-qr i { position:absolute; width:29px; height:29px; border:7px solid #aab0ad; }
 .empty-qr i:nth-child(1) { top:18px; left:18px; } .empty-qr i:nth-child(2) { top:18px; right:18px; } .empty-qr i:nth-child(3) { bottom:18px; left:18px; }
 .qr-output { min-height:450px; margin-top:22px; padding:26px; border:1px solid var(--line); border-radius:22px; background:white; box-shadow:0 16px 40px rgba(52,48,39,.12); display:grid; place-items:center; }
-.qr-image { width:min(100%,360px); height:auto; display:block; }
+.qr-image { width:min(100%,600px); height:auto; display:block; }
 .result-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
 .result-actions button { min-height:52px; box-shadow:none; }
 .print-button { background:var(--lime); color:var(--green); }

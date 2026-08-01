@@ -37,8 +37,8 @@ async function createProductQrImage(product: ProductCode) {
   });
   const qr = await loadImage(qrDataUrl);
   const canvas = document.createElement("canvas");
-  canvas.width = 720;
-  canvas.height = 900;
+  canvas.width = 1200;
+  canvas.height = 720;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("canvas failed");
 
@@ -49,17 +49,20 @@ async function createProductQrImage(product: ProductCode) {
   context.textAlign = "center";
   context.textBaseline = "middle";
 
-  let fontSize = 52;
+  let fontSize = 58;
   let lines: string[] = [];
-  while (fontSize >= 22) {
+  while (fontSize >= 26) {
     context.font = `700 ${fontSize}px sans-serif`;
-    lines = wrapLabel(context, product.name, 640);
-    if (lines.length <= 2) break;
+    lines = wrapLabel(context, product.name, 400);
+    if (lines.length <= 4) break;
     fontSize -= 2;
   }
   const lineHeight = fontSize * 1.22;
-  const firstLineY = 810 - ((lines.length - 1) * lineHeight) / 2;
-  lines.forEach((line, index) => context.fillText(line, 360, firstLineY + index * lineHeight));
+  const firstLineY = 285 - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((line, index) => context.fillText(line, 960, firstLineY + index * lineHeight));
+
+  context.font = "700 72px sans-serif";
+  context.fillText(`¥${product.price.toLocaleString("ja-JP")}`, 960, 535);
 
   return canvas.toDataURL("image/jpeg", 1);
 }
@@ -198,7 +201,7 @@ export default function Home() {
           <div className="result-header"><div><p>03 / QR CODE</p><h2>QRコード</h2></div>{product && <span>完成</span>}</div>
           {product && qrImage ? <>
             <article className="qr-output">
-              <img className="qr-image" src={qrImage} alt={`${product.name}の商品名付きQRコード`} />
+              <img className="qr-image" src={qrImage} alt={`${product.name}、${product.price.toLocaleString("ja-JP")}円の商品QRコード`} />
             </article>
             <div className="result-actions">
               <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
