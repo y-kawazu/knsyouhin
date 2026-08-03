@@ -152,7 +152,7 @@ export default function Home() {
       const blob = await (await fetch(qrImage)).blob();
       const file = new File([blob], filename, { type: "image/jpeg" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: product.name });
+        await navigator.share({ files: [file] });
         setMessage(`「${filename}」の共有が完了しました。`);
         return;
       }
