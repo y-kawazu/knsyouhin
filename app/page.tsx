@@ -3,7 +3,7 @@
 import QRCode from "qrcode";
 import { FormEvent, useRef, useState } from "react";
 
-type ProductCode = { code: string; name: string; manufacturer: string; model: string; price: number };
+type ProductCode = { code: string; name: string; manufacturer: string; productName: string; model: string; price: number };
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -55,18 +55,19 @@ async function createProductQrImage(product: ProductCode) {
     while (fontSize >= 12) {
       context!.font = `800 ${fontSize}px sans-serif`;
       lines = wrapLabel(context!, label, 400);
-      if (lines.length * fontSize * 1.16 <= 170) break;
+      if (lines.length * fontSize * 1.16 <= 130) break;
       fontSize -= 3;
     }
     const lineHeight = fontSize * 1.16;
     const firstLineY = centerY - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, index) => context!.fillText(line, 960, firstLineY + index * lineHeight));
   }
-  drawDetail(product.manufacturer, 200);
-  drawDetail(product.model, 385);
+  const details = [product.manufacturer, product.productName, product.model].filter(Boolean);
+  const positions = details.length === 1 ? [275] : details.length === 2 ? [195, 365] : [120, 275, 425];
+  details.forEach((detail, index) => drawDetail(detail, positions[index]));
 
   context.font = "800 108px sans-serif";
-  context.fillText(`¥${product.price.toLocaleString("ja-JP")}`, 960, 535);
+  context.fillText(`¥${product.price.toLocaleString("ja-JP")}`, 960, 590);
 
   return canvas.toDataURL("image/jpeg", 1);
 }
@@ -81,28 +82,31 @@ function makeProductCode() {
 
 export default function Home() {
   const [manufacturer, setManufacturer] = useState("");
+  const [productName, setProductName] = useState("");
   const [model, setModel] = useState("");
   const [price, setPrice] = useState("");
   const [product, setProduct] = useState<ProductCode | null>(null);
   const [qrImage, setQrImage] = useState("");
-  const [message, setMessage] = useState("メーカー名・品番・金額を入力してください。");
+  const [message, setMessage] = useState("メーカー名・商品名・品番・金額を入力してください。");
   const [creating, setCreating] = useState(false);
   const generation = useRef(0);
-  const changed = !!product && (manufacturer.trim() !== product.manufacturer || model.trim() !== product.model || price === "" || Number(price) !== product.price);
+  const changed = !!product && (manufacturer.trim() !== product.manufacturer || productName.trim() !== product.productName || model.trim() !== product.model || price === "" || Number(price) !== product.price);
   const canSave = !!product && !!qrImage && !changed && !creating;
-  const filename = `${product?.name.replace(/[\\/:*?"<>|]/g, "_").trim() || "KN商品"}.jpg`;
+  const filename = `${(product?.name || "KN商品").replace(/[\\/:*?"<>|]/g, "_").trim()}.jpg`;
 
   async function createQr(event: FormEvent) {
     event.preventDefault();
     const cleanManufacturer = manufacturer.trim();
+    const cleanProductName = productName.trim();
     const cleanModel = model.trim();
     const numericPrice = Math.round(Number(price));
-    if (!cleanManufacturer || !cleanModel || price === "" || !Number.isFinite(numericPrice) || numericPrice < 0) {
-      setMessage("メーカー名・品番と0円以上の金額を入力してください。");
+    const displayName = [cleanManufacturer, cleanProductName, cleanModel].filter(Boolean).join(" ");
+    if (!displayName || price === "" || !Number.isFinite(numericPrice) || numericPrice < 0) {
+      setMessage("メーカー名・商品名・品番のいずれかと、0円以上の金額を入力してください。");
       return;
     }
-    // KNレジで表示するnameにもメーカー名と品番をまとめて渡す。
-    const nextProduct = { code: makeProductCode(), name: `${cleanManufacturer} ${cleanModel}`, manufacturer: cleanManufacturer, model: cleanModel, price: numericPrice };
+    // KNレジで表示するnameにも商品情報をまとめて渡す。
+    const nextProduct = { code: makeProductCode(), name: displayName, manufacturer: cleanManufacturer, productName: cleanProductName, model: cleanModel, price: numericPrice };
     const request = ++generation.current;
     setCreating(true);
     try {
@@ -121,8 +125,8 @@ export default function Home() {
   function reset() {
     generation.current += 1;
     setCreating(false);
-    setManufacturer(""); setModel(""); setPrice(""); setProduct(null); setQrImage("");
-    setMessage("新しいメーカー名・品番・金額を入力してください。");
+    setManufacturer(""); setProductName(""); setModel(""); setPrice(""); setProduct(null); setQrImage("");
+    setMessage("新しいメーカー名・商品名・品番・金額を入力してください。");
   }
 
   async function saveQrToFiles() {
@@ -161,7 +165,9 @@ export default function Home() {
         <form className="editor-card" onSubmit={createQr}>
           <div className="section-heading"><span>01</span><div><p>DETAILS</p><h2>商品情報を入力</h2></div></div>
           <div className="fields">
+            <p className="file-save-note">メーカー名・商品名・品番は、わかる項目だけ入力してください。</p>
             <label>メーカー名<input value={manufacturer} onChange={(event) => setManufacturer(event.target.value)} placeholder="例：パナソニック" maxLength={50} /></label>
+            <label>商品名<input value={productName} onChange={(event) => setProductName(event.target.value)} placeholder="例：照明器具" maxLength={50} /></label>
             <label>品番<input value={model} onChange={(event) => setModel(event.target.value)} placeholder="例：ABC-123" maxLength={50} /></label>
             <label>金額（税込）<span className="price-field"><b>¥</b><input value={price}
               onChange={(event) => setPrice(event.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="500" /></span></label>
@@ -185,7 +191,7 @@ export default function Home() {
           </> : <div className="empty-result">
             <div className="empty-qr" aria-hidden="true"><i /><i /><i /></div>
             <h3>QRコードはここに表示されます</h3>
-            <p>メーカー名・品番・金額を入力して<br />「QRコードを作る」を押してください。</p>
+            <p>メーカー名・商品名・品番・金額を入力して<br />「QRコードを作る」を押してください。</p>
           </div>}
         </section>
       </div>
