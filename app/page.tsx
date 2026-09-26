@@ -1,7 +1,7 @@
 "use client";
 
 import QRCode from "qrcode";
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 type ProductCode = { code: string; name: string; price: number };
 
@@ -75,78 +75,51 @@ function makeProductCode() {
   return `KN${digits}${Math.floor(Math.random() * 90 + 10)}`;
 }
 
-function resizePhoto(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("read failed"));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error("image failed"));
-      image.onload = () => {
-        const scale = Math.min(1, 1400 / Math.max(image.width, image.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.86));
-      };
-      image.src = String(reader.result);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function Home() {
-  const [photo, setPhoto] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [product, setProduct] = useState<ProductCode | null>(null);
   const [qrImage, setQrImage] = useState("");
-  const [message, setMessage] = useState("写真を撮って、商品情報を入力してください。");
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  async function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) return setMessage("画像ファイルを選んでください。");
-    try {
-      setPhoto(await resizePhoto(file));
-      setMessage("写真をセットしました。商品名と金額を入力してください。");
-    } catch {
-      setMessage("写真を読み込めませんでした。もう一度お試しください。");
-    }
-  }
+  const [message, setMessage] = useState("商品名と金額を入力してください。");
+  const [creating, setCreating] = useState(false);
+  const generation = useRef(0);
+  const changed = !!product && (name.trim() !== product.name || price === "" || Number(price) !== product.price);
+  const canSave = !!product && !!qrImage && !changed && !creating;
+  const filename = `${product?.name.replace(/[\\/:*?"<>|]/g, "_").trim() || "KN商品"}.jpg`;
 
   async function createQr(event: FormEvent) {
     event.preventDefault();
     const cleanName = name.trim();
     const numericPrice = Math.round(Number(price));
-    if (!photo) {
-      setMessage("最初に商品の写真を撮ってください。");
-      fileInput.current?.click();
-      return;
-    }
     if (!cleanName || price === "" || !Number.isFinite(numericPrice) || numericPrice < 0) {
       setMessage("商品名と0円以上の金額を入力してください。");
       return;
     }
     const nextProduct = { code: makeProductCode(), name: cleanName, price: numericPrice };
-    const dataUrl = await createProductQrImage(nextProduct);
-    setProduct(nextProduct);
-    setQrImage(dataUrl);
-    setMessage("KNレジ用QRコードができました。");
+    const request = ++generation.current;
+    setCreating(true);
+    try {
+      const dataUrl = await createProductQrImage(nextProduct);
+      if (request !== generation.current) return;
+      setProduct(nextProduct);
+      setQrImage(dataUrl);
+      setMessage("KNレジ用QRコードができました。");
+    } catch {
+      if (request === generation.current) setMessage("QRコードを作成できませんでした。もう一度お試しください。");
+    } finally {
+      if (request === generation.current) setCreating(false);
+    }
   }
 
   function reset() {
-    setPhoto(""); setName(""); setPrice(""); setProduct(null); setQrImage("");
-    setMessage("新しい商品の写真を撮ってください。");
-    if (fileInput.current) fileInput.current.value = "";
+    generation.current += 1;
+    setCreating(false);
+    setName(""); setPrice(""); setProduct(null); setQrImage("");
+    setMessage("新しい商品名と金額を入力してください。");
   }
 
   async function saveQrToFiles() {
-    if (!qrImage || !product) return;
-    const safeName = product.name.replace(/[\\/:*?"<>|]/g, "_").trim() || "KN商品";
-    const filename = `${safeName}.jpg`;
+    if (!canSave) return;
 
     try {
       const blob = await (await fetch(qrImage)).blob();
@@ -179,40 +152,32 @@ export default function Home() {
 
       <div className="workspace">
         <form className="editor-card" onSubmit={createQr}>
-          <div className="section-heading"><span>01</span><div><p>PHOTO</p><h2>商品を撮影</h2></div></div>
-          <input ref={fileInput} className="visually-hidden" id="product-photo" type="file"
-            accept="image/*" capture="environment" onChange={handlePhoto} />
-          <button className={`photo-picker ${photo ? "has-photo" : ""}`} type="button" onClick={() => fileInput.current?.click()}>
-            {photo ? <><img src={photo} alt="撮影した商品" /><span>写真を撮り直す</span></> :
-              <><span className="camera-icon" aria-hidden="true" /><strong>カメラで商品を撮る</strong><small>または写真を選択</small></>}
-          </button>
-
-          <div className="section-heading form-heading"><span>02</span><div><p>DETAILS</p><h2>商品情報を入力</h2></div></div>
+          <div className="section-heading"><span>01</span><div><p>DETAILS</p><h2>商品情報を入力</h2></div></div>
           <div className="fields">
             <label>商品名<input value={name} onChange={(event) => setName(event.target.value)} placeholder="例：りんごジュース" maxLength={50} /></label>
             <label>金額（税込）<span className="price-field"><b>¥</b><input value={price}
               onChange={(event) => setPrice(event.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="500" /></span></label>
           </div>
-          <p className="status" aria-live="polite"><i />{message}</p>
-          <button className="create-button" type="submit"><span className="mini-qr" />QRコードを作る</button>
+          <p className="status" aria-live="polite"><i />{changed ? "商品情報が変更されました。「QRコードを作る」を押してください。" : message}</p>
+          <button className="create-button" type="submit" disabled={creating}><span className="mini-qr" />{creating ? "作成中…" : "QRコードを作る"}</button>
         </form>
 
         <section className={`result-card ${product ? "is-ready" : ""}`} aria-live="polite">
-          <div className="result-header"><div><p>03 / QR CODE</p><h2>QRコード</h2></div>{product && <span>完成</span>}</div>
+          <div className="result-header"><div><p>02 / QR CODE</p><h2>QRコード</h2></div>{product && <span>{changed ? "再作成が必要" : "完成"}</span>}</div>
           {product && qrImage ? <>
             <article className="qr-output">
               <img className="qr-image" src={qrImage} alt={`${product.name}、${product.price.toLocaleString("ja-JP")}円の商品QRコード`} />
             </article>
             <div className="result-actions">
-              <button type="button" className="save-button" onClick={saveQrToFiles}>Appleのファイルに保存</button>
+              <button type="button" className="save-button" onClick={saveQrToFiles} disabled={!canSave}>Appleのファイルに保存</button>
               <button type="button" className="next-button" onClick={reset}>次の商品を作る</button>
             </div>
-            <p className="file-save-note">Appleでは共有画面から「“ファイル”に保存」を選んでください。</p>
-            <button type="button" className="print-button" onClick={() => window.print()}>QRコードを印刷</button>
+            <p className="file-save-note">{changed ? "商品情報を反映するには、QRコードを作り直してください。" : `保存ファイル名：${filename}`}<br />Appleでは共有画面から「“ファイル”に保存」を選んでください。</p>
+            <button type="button" className="print-button" disabled={!canSave} onClick={() => window.print()}>QRコードを印刷</button>
           </> : <div className="empty-result">
             <div className="empty-qr" aria-hidden="true"><i /><i /><i /></div>
             <h3>QRコードはここに表示されます</h3>
-            <p>写真・商品名・金額を入力して<br />「QRコードを作る」を押してください。</p>
+            <p>商品名と金額を入力して<br />「QRコードを作る」を押してください。</p>
           </div>}
         </section>
       </div>

@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
   const title = "KN商品 | KNレジ用QRコード作成";
-  const description = "商品写真・商品名・金額から、KNレジで読み取れる商品QRコードを作成します。";
+  const description = "商品名と金額から、KNレジで読み取れる商品QRコードを作成します。";
 
   return {
     title,
