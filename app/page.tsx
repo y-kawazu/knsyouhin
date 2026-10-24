@@ -14,22 +14,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function wrapLabel(context: CanvasRenderingContext2D, label: string, maxWidth: number) {
-  const lines: string[] = [];
-  let line = "";
-  for (const character of label) {
-    const next = line + character;
-    if (line && context.measureText(next).width > maxWidth) {
-      lines.push(line);
-      line = character;
-    } else {
-      line = next;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
 async function createProductQrImage(product: ProductCode) {
   const qrDataUrl = await QRCode.toDataURL(JSON.stringify(product), {
     width: 720, margin: 2, errorCorrectionLevel: "M",
@@ -37,37 +21,28 @@ async function createProductQrImage(product: ProductCode) {
   });
   const qr = await loadImage(qrDataUrl);
   const canvas = document.createElement("canvas");
-  canvas.width = 1200;
-  canvas.height = 720;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("canvas failed");
+  const details = [product.manufacturer, product.productName, product.model].filter(Boolean);
+  const priceLabel = `¥${product.price.toLocaleString("ja-JP")}`;
+  const font = "800 108px sans-serif";
+  context.font = font;
+  const textWidth = Math.ceil(Math.max(...[...details, priceLabel].map(label => context.measureText(label).width)));
+  // QR部分は720pxのまま、文字を縮小せず画像の横幅を広げる。
+  canvas.width = 720 + 48 + Math.max(432, textWidth) + 48;
+  canvas.height = 720;
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(qr, 0, 0, 720, 720);
   context.fillStyle = "#000000";
-  context.textAlign = "center";
+  context.font = font;
+  context.textAlign = "left";
   context.textBaseline = "middle";
 
-  function drawDetail(label: string, centerY: number) {
-    let fontSize = 87;
-    let lines: string[] = [];
-    while (fontSize >= 12) {
-      context!.font = `800 ${fontSize}px sans-serif`;
-      lines = wrapLabel(context!, label, 400);
-      if (lines.length * fontSize * 1.16 <= 130) break;
-      fontSize -= 3;
-    }
-    const lineHeight = fontSize * 1.16;
-    const firstLineY = centerY - ((lines.length - 1) * lineHeight) / 2;
-    lines.forEach((line, index) => context!.fillText(line, 960, firstLineY + index * lineHeight));
-  }
-  const details = [product.manufacturer, product.productName, product.model].filter(Boolean);
   const positions = details.length === 1 ? [275] : details.length === 2 ? [195, 365] : [120, 275, 425];
-  details.forEach((detail, index) => drawDetail(detail, positions[index]));
-
-  context.font = "800 108px sans-serif";
-  context.fillText(`¥${product.price.toLocaleString("ja-JP")}`, 960, 590);
+  details.forEach((detail, index) => context.fillText(detail, 768, positions[index]));
+  context.fillText(priceLabel, 768, 590);
 
   return canvas.toDataURL("image/jpeg", 1);
 }
